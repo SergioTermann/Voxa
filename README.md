@@ -1,61 +1,81 @@
-# Voxa · macOS
+# Voxa for macOS
 
 <img src="Assets/Voxa-icon.png" alt="Voxa app icon" width="112" />
 
-一个原生菜单栏语音输入应用。点击任意软件中的可编辑区域，轻按两下右侧 ⌘ Command 开始听写，说完停顿后自动结束并输入，文字优先通过输入框的辅助功能接口插入；不支持时使用系统粘贴，输入到停止听写时的光标位置。
+**Your voice, right where you type.**
 
-## 下载
+Voxa is a native menu bar dictation app. Click a text field, double-tap the right Command key, and speak. By default, Voxa finishes after a quiet pause and inserts your words at the cursor. It uses the field's Accessibility interface when supported, with system paste as a fallback.
 
-[下载最新版 Voxa](https://github.com/SergioTermann/Voxa/releases/latest)。下载 `Voxa-v1.0.0-macOS-arm64.zip`，解压后将 `Voxa.app` 放入“应用程序”。需要 Apple Silicon Mac 和 macOS 13+。
+## Download
 
-发布包使用临时签名，未做 Apple 公证，macOS 可能要求通过“系统设置 → 隐私与安全性”确认打开。也可以按下面的构建步骤，从源码在本机编译。
+[Download the latest release](https://github.com/SergioTermann/Voxa/releases/latest). Unzip `Voxa-v1.1.0-macOS-arm64.zip` and move `Voxa.app` to Applications.
 
-## 使用
+Requires an **Apple Silicon Mac** running **macOS 13 or later**. Releases are ad hoc signed and are not notarized by Apple. macOS may require you to approve opening the app in **System Settings > Privacy & Security**. You can also build it from source.
 
-1. 打开 `Voxa.app`。
-2. 在设置中开启**麦克风**、**语音识别**、**辅助功能**权限。系统设置 → 隐私与安全性 → 辅助功能中，打开“Voxa”的开关。应用无法代替你同意这些系统授权。
-   还需在**系统设置 → 键盘 → 听写**中开启系统听写，可从 Voxa 的“听写设置 → macOS 系统听写 → 打开设置”进入。如果出现 “Siri and Dictation are disabled”，先开启该开关，并按系统提示确认，然后回到 Voxa 重试。开关不可用时，检查屏幕时间限制或设备管理策略。
-3. 进入微信、浏览器、文档等软件，点击输入框，使光标出现。
-4. 轻按并松开右侧 ⌘ 两次开始，说话。默认安静停顿约 1.6 秒后自动结束并输入；也可点右下角的“结束并输入”或再轻按两次结束。每次按住不超过 0.5 秒，两次间隔小于 0.65 秒。
+## Get started
 
-备用快捷键：**Control + Option + 空格**开始／停止。**Control + Option + Esc**取消，不输入文字。菜单栏麦克风图标也可开始／停止、查看设置、复制最近识别、退出。
+1. Open `Voxa.app`.
+2. In Voxa, enable **Microphone**, **Speech Recognition**, and **Accessibility** permissions. For Accessibility, enable Voxa in **System Settings > Privacy & Security > Accessibility**.
+3. Enable **Dictation** in **System Settings > Keyboard > Dictation**. Voxa provides an **Open Settings** button under **Dictation Settings > macOS Dictation**.
+4. Click an editable text field in your browser, chat app, document, or editor.
+5. Tap and release **Right Command twice** to start dictation. Each press must be shorter than 0.5 seconds, with a gap of less than 0.65 seconds between taps.
+6. Speak, then pause. After recognized text is stable and the microphone is quiet for about **1.6 seconds**, Voxa finishes and inserts the transcript. You can also click **Finish & Insert** in the floating preview or use your shortcut again.
 
-右侧 ⌘ 双击监听不拦截按键，也不延迟普通打字。长按、使用 Command 组合快捷键、点击鼠标或切换软件都会中断双击序列。该功能需要辅助功能权限。
+**Control + Option + Space** is the backup shortcut when using Right Command or triple Space. **Control + Option + Esc** cancels dictation without inserting text. The menu bar icon also provides start, finish, settings, copy, and quit actions.
 
-设置 → 听写设置 → 开始／停止快捷键，可选择右侧 ⌘ 双击、Control + Option + V、Command + Shift + 空格、Control + Option + 空格或三下空格。选择即时生效并保存；组合键被占用时保留原设置。
+Right Command detection does not intercept keys or delay ordinary typing. Holding the key, using a Command shortcut, clicking the mouse, or switching apps interrupts the double-tap sequence. Accessibility permission is required.
 
-只有选择“三下空格”时，才启用空格拦截：普通空格最多延迟 0.32 秒，触发的三下不输入文字。该模式监听不可用时，可在设置页打开输入监控权限并重启应用。
+## Settings
 
-## 识别与隐私
+- **Start / Finish Shortcut:** Right Command twice, Control + Option + V, Command + Shift + Space, Control + Option + Space, or triple Space. Changes apply immediately and are saved. If a combination is already in use, Voxa keeps your previous setting.
+- **Dictation Language:** English (US), Mandarin (Simplified Chinese), Cantonese (Hong Kong), or Mandarin (Traditional Chinese). New installations default to English; existing preferences are preserved.
+- **Offline only:** prevents fallback to Apple online recognition when on-device recognition is unavailable.
+- **Automatically insert after a pause:** enabled by default. Turn it off if you prefer to finish manually.
 
-- 默认普通话，支持切换英文、粤语和繁体国语。
-- 优先使用 Apple 在本机提供的语音识别，无需 API 密钥。是否支持本机识别取决于系统、语言与已下载的语言资源。
-- 若当前语言不支持本机识别，默认使用 Apple 在线识别，声音会交给 Apple 语音服务处理，需要联网。开启“仅离线识别”可禁止该回退。
-- 默认开启“说完停顿后自动输入”：文字稳定且声音安静约 1.6 秒后自动结束，可在设置关闭。每段最多约 55 秒，随后自动结束。长内容可分段听写。
-- 不保存录音；最近一次识别文字只留在应用内存里，可清除或复制。退出应用清空文字。
-- 应用根据所选模式监听按键类型以识别触发动作，不记录其他按键内容。
+Only the **triple Space** option intercepts spaces. Tap within 0.32 seconds of each previous tap. Ordinary spaces can be delayed by up to 0.32 seconds, while the three trigger spaces are consumed. If detection is unavailable, use the settings link to enable **Input Monitoring**, then restart Voxa.
 
-## 输入行为
+The app interface, messages, and documentation are in English. Dictation can still produce text in any supported language. macOS permission dialogs and other apps' names follow your system language.
 
-- 浮动听写预览带“结束并输入”和“取消”按钮，点击不抢光标。在听写期间可以点击其他输入框，结束时以当时的光标位置为准。
-- 已有选中文字时，系统粘贴将替换选中内容。
-- 识别结束时若窗口或焦点改变、权限被撤销、目标是可识别的密码框，则保留文字供手动复制。
-- 支持的编辑器直接替换当前选中文字或插入到光标处，不使用剪贴板。粘贴回退只向选定的软件进程发送按键，暂时使用剪贴板，约 1 秒后恢复原内容；用户在此期间复制了新内容时，保留用户的新内容。
-- 必须点击**可编辑区域**；无法向按钮、图片或不支持系统粘贴的控件输入。系统保护输入、部分游戏、远程桌面或特殊编辑器可能无法自动粘贴，可从菜单复制识别结果。
-- 软件不会发送回车。终端中粘贴内容的后续行为由终端决定。
+## Recognition and privacy
 
-## 开发
+- No API key or third-party dependency is required.
+- Voxa prefers Apple on-device speech recognition. Availability depends on your Mac, language, and installed speech resources.
+- If on-device recognition is unavailable, Apple online recognition may be used. This requires an internet connection and sends audio to Apple's speech service. Enable **Offline only** to prevent this fallback.
+- Each session lasts up to approximately 55 seconds. Dictate longer content in separate sessions.
+- Voxa does not save recordings. The last transcript stays in memory, can be copied or cleared, and is removed when the app exits.
+- Key events are inspected only to detect the selected trigger; other keystrokes are not logged.
 
-需要 Apple Silicon Mac、macOS 13+ 和 Xcode 命令行工具。无需第三方依赖。
+## Insertion behavior
+
+- The floating preview has **Finish & Insert** and **Cancel** buttons. Clicking them does not take keyboard focus away from your text field.
+- You can click another field while dictating. Voxa uses the cursor location when dictation finishes.
+- Selected text is replaced when the transcript is inserted.
+- If the active app or focus changes while recognition is finishing, permission is revoked, or the target is a recognized password field, Voxa preserves the transcript for manual copying.
+- Supported editors receive text directly through Accessibility, without using the clipboard.
+- Paste fallback sends keystrokes to the selected app's process. The clipboard is temporarily used and restored after about one second. If you copy something new in the meantime, your new clipboard content is preserved.
+- The cursor must be in an **editable field**. Buttons, images, protected input, some games, remote desktops, and unusual editors may not support insertion. Copy the last transcript from the menu bar if needed.
+- Voxa does not send Return. Terminal paste behavior is controlled by your terminal.
+
+## Troubleshooting
+
+**“Siri and Dictation are disabled”**: enable Dictation under **System Settings > Keyboard**, accept any system prompt, and try again. If the switch is unavailable, check Screen Time restrictions or device management policies.
+
+**Words remain in the preview**: click **Finish & Insert** or enable **Automatically insert after a pause**. Recognition preview is separate from insertion.
+
+**Text is not inserted**: check Accessibility permission, place the cursor in an editable field, and keep that field focused while recognition finishes. Your transcript remains available under **Last Transcript**.
+
+## Build from source
+
+Requires Apple Silicon, macOS 13+, and Xcode command line tools.
 
 ```sh
+git clone https://github.com/SergioTermann/Voxa.git
+cd Voxa
 bash scripts/build.sh
 bash scripts/test.sh
 open 'build/Voxa.app'
 ```
 
-构建默认使用当前 Mac 已有的 Apple Development 签名身份，否则使用临时签名。可用 `VOICECURSOR_SIGN_IDENTITY` 指定签名身份；显式设为 `-` 则使用临时签名。系统权限绑定签名与安装路径，安装后建议从固定路径运行。
+The build uses an existing local Apple Development signing identity if available, otherwise ad hoc signing. Set `VOICECURSOR_SIGN_IDENTITY` to choose an identity, or explicitly set it to `-` for ad hoc signing. macOS permissions depend on signing and installation location; run the app from a stable path.
 
-该版本是在本机开发和签名的版本，未做面向其他用户分发的 Apple 公证。
-
-测试覆盖自动结束条件、Command 双击、长按与组合键中断、快速连敲空格、正常空格补发、长按与松键、修饰键、窗口切换、密码框策略、剪贴板恢复策略和应用启动。已在本机文本编辑器验证文字实际进入输入框；真实麦克风听写、其他软件兼容性仍需在使用者授权后实测。
+Tests cover automatic finish conditions, Command double-taps, long presses, shortcut interruption, triple Space, replaying ordinary spaces, key releases, app changes, password-field policy, clipboard restoration, and app startup. Insertion has been verified in TextEdit on the development Mac. Live microphone recognition and compatibility with other apps require testing after the user's permissions are granted.

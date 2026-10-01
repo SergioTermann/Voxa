@@ -12,18 +12,18 @@ enum TriggerShortcut: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .doubleRightCommand: return "右 ⌘ × 2"
+        case .doubleRightCommand: return "Right ⌘ × 2"
         case .controlOptionV: return "⌃⌥ V"
-        case .commandShiftSpace: return "⌘⇧ 空格"
-        case .controlOptionSpace: return "⌃⌥ 空格"
-        case .tripleSpace: return "空格 × 3"
+        case .commandShiftSpace: return "⌘⇧ Space"
+        case .controlOptionSpace: return "⌃⌥ Space"
+        case .tripleSpace: return "Space × 3"
         }
     }
     var instruction: String {
         switch self {
-        case .doubleRightCommand: return "轻按两下右侧 ⌘"
-        case .tripleSpace: return "快速敲三下空格"
-        default: return "按 \(label)"
+        case .doubleRightCommand: return "double-tap Right ⌘"
+        case .tripleSpace: return "tap Space three times quickly"
+        default: return "press \(label)"
         }
     }
     var keyCode: UInt32 { self == .controlOptionV ? UInt32(kVK_ANSI_V) : UInt32(kVK_Space) }
@@ -41,12 +41,12 @@ final class VoiceController: NSObject, ObservableObject {
     @Published var phase: ListeningPhase = .idle
     @Published var transcript = ""
     @Published var lastResult = ""
-    @Published var message = "点进输入框，按快捷键开始听写。"
+    @Published var message = "Click a text field, then use your shortcut to start dictation."
     @Published private(set) var shortcut: TriggerShortcut = TriggerShortcut(rawValue: UserDefaults.standard.string(forKey: "triggerPreset") ?? "") ?? .doubleRightCommand
     @Published var speechPermission = false
     @Published var microphonePermission = false
     @Published var accessibilityPermission = false
-    @Published var language: String = UserDefaults.standard.string(forKey: "language") ?? "zh-CN" {
+    @Published var language: String = UserDefaults.standard.string(forKey: "language") ?? "en-US" {
         didSet { UserDefaults.standard.set(language, forKey: "language"); refreshPermissions() }
     }
     @Published var localOnly: Bool = UserDefaults.standard.object(forKey: "localOnly") as? Bool ?? false {
@@ -86,7 +86,7 @@ final class VoiceController: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        message = "点进输入框，\(shortcut.instruction)开始听写。"
+        message = "Click a text field, then \(shortcut.instruction) to start dictation."
         rememberExternalApp()
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(activated(_:)), name: NSWorkspace.didActivateApplicationNotification, object: nil)
         refreshPermissions()
@@ -128,13 +128,13 @@ final class VoiceController: NSObject, ObservableObject {
     func selectShortcut(_ choice: TriggerShortcut) {
         guard phase == .idle, choice != shortcut else { return }
         guard configureShortcut?(choice) == true else {
-            message = "\(choice.label) 已被占用，仍使用 \(shortcut.label)。请换一个组合。"
+            message = "\(choice.label) is already in use. Keeping \(shortcut.label); choose another shortcut."
             stateChanged?()
             return
         }
         shortcut = choice
         UserDefaults.standard.set(choice.rawValue, forKey: "triggerPreset")
-        message = "快捷键已改为 \(choice.label)，开始和停止都用同一个组合。"
+        message = "Shortcut changed to \(choice.label). Use it to start and finish dictation."
         permissionsChanged?()
         stateChanged?()
     }
@@ -170,7 +170,7 @@ final class VoiceController: NSObject, ObservableObject {
         case .idle:
             if fromSettings {
                 guard let app = lastExternalApp, !app.isTerminated else {
-                    message = "请先在其他软件里点击一个输入框，再\(shortcut.instruction)。"
+                    message = "Click a text field in another app, then \(shortcut.instruction)."
                     return
                 }
                 hideSettings?()
@@ -184,30 +184,30 @@ final class VoiceController: NSObject, ObservableObject {
         guard phase == .idle else { return }
         refreshPermissions()
         guard microphonePermission, speechPermission, accessibilityPermission else {
-            message = "开始前请开启下方权限，然后回到输入框\(shortcut.instruction)。"
+            message = "Enable the permissions below, return to your text field, then \(shortcut.instruction)."
             showSettings?()
             return
         }
         rememberExternalApp()
         guard let front = NSWorkspace.shared.frontmostApplication,
               front.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
-            message = "请先在目标软件的输入框中放置光标。"
+            message = "Place your cursor in a text field in the target app first."
             showSettings?()
             return
         }
         let initialTarget = captureTarget(app: front)
         guard !initialTarget.secure else {
-            message = "当前是密码输入框，请换一个普通输入框。"
+            message = "This is a password field. Choose a regular text field."
             stateChanged?()
             return
         }
         guard let speech = SFSpeechRecognizer(locale: Locale(identifier: language)), speech.isAvailable else {
-            message = "语音识别暂不可用。请检查网络，或切换识别语言后重试。"
+            message = "Speech recognition is unavailable. Check your connection or choose another dictation language."
             showSettings?()
             return
         }
         guard !localOnly || speech.supportsOnDeviceRecognition else {
-            message = "这台电脑暂不支持该语言的离线听写，可换语言或关闭“仅离线识别”。"
+            message = "On-device recognition is unavailable for this language. Choose another language or turn off Offline only."
             showSettings?()
             return
         }
@@ -223,11 +223,11 @@ final class VoiceController: NSObject, ObservableObject {
         audioRequest.requiresOnDeviceRecognition = speech.supportsOnDeviceRecognition
         if #available(macOS 13.0, *) { audioRequest.addsPunctuation = true }
         request = audioRequest
-        recognitionMode = audioRequest.requiresOnDeviceRecognition ? "本机离线识别" : "Apple 在线识别"
+        recognitionMode = audioRequest.requiresOnDeviceRecognition ? "On-device recognition" : "Apple online recognition"
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0 else {
-            fail("没有可用的麦克风，请检查系统声音输入设置。")
+            fail("No microphone is available. Check the input device in System Settings > Sound.")
             return
         }
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
@@ -261,8 +261,8 @@ final class VoiceController: NSObject, ObservableObject {
                 }
                 if let errorText, SpeechFailurePolicy.isSystemDictationDisabled(errorText) {
                     self.systemDictationDisabled = true
-                    let retained = self.transcript.isEmpty ? "" : " 已识别文字已保留，可复制。"
-                    self.fail("macOS 的系统听写已关闭。请点击“打开系统听写设置”，在键盘设置中开启“听写”，然后重试。" + retained)
+                    let retained = self.transcript.isEmpty ? "" : " Your transcript is saved for copying."
+                    self.fail("macOS Dictation is turned off. Click Open Dictation Settings, enable Dictation under Keyboard, then try again." + retained)
                     return
                 }
                 if let words, !words.isEmpty { self.systemDictationDisabled = false }
@@ -270,8 +270,8 @@ final class VoiceController: NSObject, ObservableObject {
                     if isFinal || errorText != nil { self.complete() }
                 } else if self.phase == .listening {
                     if let errorText {
-                        let retained = self.transcript.isEmpty ? "" : " 已识别文字已保留，可复制。"
-                        self.fail("识别中断：\(errorText)。" + retained)
+                        let retained = self.transcript.isEmpty ? "" : " Your transcript is saved for copying."
+                        self.fail("Recognition was interrupted: \(errorText)." + retained)
                     } else if isFinal {
                         self.stop()
                         self.complete()
@@ -283,7 +283,7 @@ final class VoiceController: NSObject, ObservableObject {
             engine.prepare()
             try engine.start()
             phase = .listening
-            message = "正在听写 · 再\(shortcut.instruction)结束并输入。"
+            message = "Listening. \(shortcut.instruction.capitalized) again to finish and insert."
             showHUD?()
             stateChanged?()
             maximumTimer = Timer.scheduledTimer(withTimeInterval: 55, repeats: false) { [weak self] _ in
@@ -301,7 +301,7 @@ final class VoiceController: NSObject, ObservableObject {
             }
             if let autoFinishTimer { RunLoop.main.add(autoFinishTimer, forMode: .common) }
         } catch {
-            fail("无法启动麦克风：\(error.localizedDescription)")
+            fail("Could not start the microphone: \(error.localizedDescription)")
         }
     }
 
@@ -317,7 +317,7 @@ final class VoiceController: NSObject, ObservableObject {
             app.activate()
         } else { target = nil }
         phase = .finishing
-        message = "正在整理文字…"
+        message = "Finishing…"
         maximumTimer?.invalidate()
         autoFinishTimer?.invalidate()
         stopAudio()
@@ -333,7 +333,7 @@ final class VoiceController: NSObject, ObservableObject {
         guard phase != .idle else { return }
         lastResult = TextPolicy.clean(transcript)
         cleanup()
-        message = "听写已取消，文字保留，可在设置中复制。"
+        message = "Dictation canceled. Your transcript is available in Settings for copying."
         stateChanged?()
     }
 
@@ -374,39 +374,39 @@ final class VoiceController: NSObject, ObservableObject {
         let destination = target
         cleanup()
         guard !text.isEmpty else {
-            message = "没有识别到文字，请检查麦克风后重试。"
+            message = "No speech was recognized. Check your microphone and try again."
             stateChanged?()
             return
         }
         lastResult = text
         guard let destination, !destination.secure else {
-            message = "没有可用的输入位置。文字已保留，请打开设置复制。"
+            message = "No text field is available. Open Settings to copy your transcript."
             stateChanged?()
             return
         }
         guard AXIsProcessTrusted(), !destination.app.isTerminated,
               NSWorkspace.shared.frontmostApplication?.processIdentifier == destination.app.processIdentifier else {
-            message = "输入窗口已切换，文字已保留，可在设置中复制。"
+            message = "The active window changed. Your transcript is available in Settings for copying."
             stateChanged?()
             return
         }
         let current = captureTarget(app: destination.app)
         guard !current.secure else {
-            message = "当前是密码输入框，文字已保留，未输入。"
+            message = "This is a password field. Your transcript was saved but not inserted."
             stateChanged?()
             return
         }
         if let expected = destination.element, let actual = current.element, !CFEqual(expected, actual) {
-            message = "光标位置已改变，文字已保留，可在设置中复制。"
+            message = "The cursor moved. Your transcript is available in Settings for copying."
             stateChanged?()
             return
         }
         guard paste(text, to: destination) else {
-            message = "无法发送粘贴按键。文字已保留，可在设置中复制。"
+            message = "Could not send the paste shortcut. Copy your transcript from Settings."
             stateChanged?()
             return
         }
-        message = "正在输入到 \(destination.app.localizedName ?? "当前软件")…"
+        message = "Inserting into \(destination.app.localizedName ?? "the target app")…"
         stateChanged?()
     }
 
@@ -436,7 +436,7 @@ final class VoiceController: NSObject, ObservableObject {
                AXUIElementSetAttributeValue(element, kAXSelectedTextAttribute as CFString, text as CFString) == .success {
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
-                    self.message = "已输入到 \(destination.app.localizedName ?? "当前软件") · \(self.shortcut.label) 继续。"
+                    self.message = "Inserted into \(destination.app.localizedName ?? "the target app"). Use \(self.shortcut.label) to dictate again."
                     self.stateChanged?()
                 }
                 return true
@@ -462,7 +462,7 @@ final class VoiceController: NSObject, ObservableObject {
                   app.processIdentifier == destination.app.processIdentifier,
                   AXIsProcessTrusted() else {
                 self?.restoreClipboard(previousItems, ownedCount: ownedCount)
-                self?.message = "输入窗口已切换，文字已保留，可在设置中复制。"
+                self?.message = "The active window changed. Your transcript is available in Settings for copying."
                 self?.stateChanged?()
                 return
             }
@@ -473,12 +473,12 @@ final class VoiceController: NSObject, ObservableObject {
             } else { focusChanged = false }
             guard !current.secure, !focusChanged else {
                 self.restoreClipboard(previousItems, ownedCount: ownedCount)
-                self.message = "输入位置已改变，文字已保留，可在设置中复制。"
+                self.message = "The input location changed. Copy your transcript from Settings."
                 self.stateChanged?()
                 return
             }
             guard board.changeCount == ownedCount else {
-                self.message = "剪贴板内容已改变，文字已保留，可在设置中复制。"
+                self.message = "The clipboard changed. Copy your transcript from Settings."
                 self.stateChanged?()
                 return
             }
@@ -486,7 +486,7 @@ final class VoiceController: NSObject, ObservableObject {
             up.flags = []
             down.postToPid(destination.app.processIdentifier)
             up.postToPid(destination.app.processIdentifier)
-            self.message = "已向 \(app.localizedName ?? "当前软件") 发送文字 · \(self.shortcut.label) 继续。"
+            self.message = "Text sent to \(app.localizedName ?? "the target app"). Use \(self.shortcut.label) to dictate again."
             self.stateChanged?()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.restoreClipboard(previousItems, ownedCount: ownedCount)
@@ -506,7 +506,7 @@ final class VoiceController: NSObject, ObservableObject {
         guard !lastResult.isEmpty else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(lastResult, forType: .string)
-        message = "已复制识别结果。"
+        message = "Transcript copied."
         stateChanged?()
     }
 
@@ -514,7 +514,7 @@ final class VoiceController: NSObject, ObservableObject {
         guard phase == .idle else { return }
         transcript = ""
         lastResult = ""
-        message = "识别记录已清除。"
+        message = "Transcript cleared."
         stateChanged?()
     }
 
@@ -561,7 +561,7 @@ struct PermissionRow: View {
                 Text(detail).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Button(granted ? "已允许" : "开启", action: action).disabled(granted)
+            Button(granted ? "Allowed" : "Enable", action: action).disabled(granted)
         }.padding(.vertical, 5)
     }
 }
@@ -575,110 +575,110 @@ struct SettingsView: View {
                     Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 64, height: 64)
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Voxa").font(.system(size: 27, weight: .bold))
-                        Text("光标放哪里，声音就写到哪里。") .foregroundStyle(.secondary)
+                        Text("Your voice, right where you type.").foregroundStyle(.secondary)
                     }
                     Spacer()
                     Text(model.shortcut.label).font(.system(.body, design: .monospaced)).padding(10)
                         .background(Color.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    Label(model.phase == .listening ? "正在听写" : model.phase == .finishing ? "正在整理" : model.systemDictationDisabled ? "需要开启系统听写" : "准备就绪", systemImage: model.phase == .listening ? "mic.fill" : "keyboard")
+                    Label(model.phase == .listening ? "Listening" : model.phase == .finishing ? "Finishing" : model.systemDictationDisabled ? "Enable macOS Dictation" : "Ready", systemImage: model.phase == .listening ? "mic.fill" : "keyboard")
                         .font(.headline).foregroundStyle(.teal)
                     Text(model.message).font(.callout).textSelection(.enabled)
                     if model.systemDictationDisabled {
-                        Button("打开系统听写设置") { model.openDictationSettings() }
+                        Button("Open Dictation Settings") { model.openDictationSettings() }
                     }
                     HStack {
-                        Button(model.phase == .listening ? "停止并输入" : "开始听写") { model.toggle(fromSettings: true) }
+                        Button(model.phase == .listening ? "Finish & Insert" : "Start Dictation") { model.toggle(fromSettings: true) }
                             .buttonStyle(.borderedProminent).tint(.teal)
                             .disabled(model.phase == .finishing)
                         if model.phase == .listening || model.phase == .finishing {
-                            Button("取消") { model.cancel() }
+                            Button("Cancel") { model.cancel() }
                         }
                         Spacer()
                     }
                 }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.teal.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
-                GroupBox("首次使用 · 系统权限") {
+                GroupBox("System Permissions") {
                     VStack(spacing: 0) {
-                        PermissionRow(title: "麦克风", detail: "接收你的声音", granted: model.microphonePermission) {
+                        PermissionRow(title: "Microphone", detail: "Capture your voice", granted: model.microphonePermission) {
                             if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined { model.authorizeMicrophone() }
                             else { model.openPrivacy("Microphone") }
                         }
                         Divider()
-                        PermissionRow(title: "语音识别", detail: "将声音转为文字", granted: model.speechPermission) {
+                        PermissionRow(title: "Speech Recognition", detail: "Convert speech to text", granted: model.speechPermission) {
                             if SFSpeechRecognizer.authorizationStatus() == .notDetermined { model.authorizeSpeech() }
                             else { model.openPrivacy("SpeechRecognition") }
                         }
                         Divider()
-                        PermissionRow(title: "辅助功能", detail: "把文字粘贴到当前输入框", granted: model.accessibilityPermission) { model.authorizeAccessibility() }
+                        PermissionRow(title: "Accessibility", detail: "Insert text into the active field", granted: model.accessibilityPermission) { model.authorizeAccessibility() }
                         if model.shortcut == .tripleSpace && model.accessibilityPermission && !model.tripleSpaceAvailable {
                             Divider()
-                            PermissionRow(title: "全局空格监听", detail: "若三下空格未生效，请在输入监控中允许Voxa并重启。", granted: false) { model.openPrivacy("ListenEvent") }
+                            PermissionRow(title: "Global Space Detection", detail: "If triple Space does not work, allow Voxa in Input Monitoring and restart it.", granted: false) { model.openPrivacy("ListenEvent") }
                         }
                     }.padding(8)
                 }
-                GroupBox("听写设置") {
+                GroupBox("Dictation Settings") {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text("macOS 系统听写").fontWeight(.medium)
-                                Text("Apple 语音服务需要系统听写已开启。")
+                                Text("macOS Dictation").fontWeight(.medium)
+                                Text("Apple speech services require macOS Dictation to be enabled.")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button("打开设置") { model.openDictationSettings() }
+                            Button("Open Settings") { model.openDictationSettings() }
                         }
                         Divider()
-                        Picker("开始／停止快捷键", selection: Binding(get: { model.shortcut }, set: { model.selectShortcut($0) })) {
+                        Picker("Start / Finish Shortcut", selection: Binding(get: { model.shortcut }, set: { model.selectShortcut($0) })) {
                             ForEach(TriggerShortcut.allCases, id: \.self) { choice in
                                 Text(choice.label).tag(choice)
                             }
                         }.disabled(model.phase != .idle)
-                        Picker("识别语言", selection: $model.language) {
-                            Text("普通话（简体中文）").tag("zh-CN")
+                        Picker("Dictation Language", selection: $model.language) {
+                            Text("Mandarin (Simplified Chinese)").tag("zh-CN")
                             Text("English (US)").tag("en-US")
-                            Text("粤语（香港）").tag("zh-HK")
-                            Text("國語（繁體中文）").tag("zh-TW")
+                            Text("Cantonese (Hong Kong)").tag("zh-HK")
+                            Text("Mandarin (Traditional Chinese)").tag("zh-TW")
                         }.disabled(model.phase != .idle)
-                        Toggle("仅离线识别", isOn: $model.localOnly).disabled(model.phase != .idle)
-                        Toggle("说完停顿后自动输入", isOn: $model.autoFinish)
-                        Text("识别出文字后，安静停顿约 1.6 秒会自动结束并输入。也可点击右下角“结束并输入”，或再按触发键结束。")
+                        Toggle("Offline only", isOn: $model.localOnly).disabled(model.phase != .idle)
+                        Toggle("Automatically insert after a pause", isOn: $model.autoFinish)
+                        Text("After speech is recognized, a quiet pause of about 1.6 seconds finishes dictation and inserts the text. You can also click Finish & Insert or use your shortcut again.")
                             .font(.caption).foregroundStyle(.secondary)
-                        Text(model.onDeviceAvailable ? "当前语言支持本机识别，将优先离线处理声音。" : "当前语言未提供本机识别；默认使用 Apple 在线识别，需要联网。")
+                        Text(model.onDeviceAvailable ? "On-device recognition is available for this language. Audio will be processed locally." : "On-device recognition is unavailable for this language. Apple online recognition requires an internet connection.")
                             .font(.caption).foregroundStyle(.secondary)
-                        Text("不需要 API 密钥。每次最多听写约 55 秒。识别结果只保存在本次运行内存中。")
+                        Text("No API key required. Each session lasts up to 55 seconds. Transcripts stay in memory only.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.padding(8)
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("最近识别").font(.headline)
+                        Text("Last Transcript").font(.headline)
                         Spacer()
-                        Button("复制") { model.copyResult() }.disabled(model.lastResult.isEmpty)
-                        Button("清除") { model.clearResult() }.disabled(model.phase != .idle || model.lastResult.isEmpty)
+                        Button("Copy") { model.copyResult() }.disabled(model.lastResult.isEmpty)
+                        Button("Clear") { model.clearResult() }.disabled(model.phase != .idle || model.lastResult.isEmpty)
                     }
-                    Text(model.lastResult.isEmpty ? "识别后的文字会显示在这里。" : model.lastResult)
+                    Text(model.lastResult.isEmpty ? "Your latest transcript will appear here." : model.lastResult)
                         .foregroundStyle(model.lastResult.isEmpty ? .secondary : .primary)
                         .textSelection(.enabled).frame(maxWidth: .infinity, minHeight: 48, alignment: .topLeading)
                         .padding(12).background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
                 }
-                Text("使用：点击输入框 → \(model.shortcut.instruction) → 说话 → 再\(model.shortcut.instruction)。\n取消：⌃⌥ Esc。需要光标已进入可编辑区域；网页、聊天软件、文档及终端通过系统粘贴输入。")
+                Text("Click a text field → \(model.shortcut.instruction) → speak → pause or use the shortcut again.\nCancel: ⌃⌥ Esc. The cursor must be in an editable field.")
                     .font(.caption).foregroundStyle(.secondary)
                 if model.shortcut == .tripleSpace {
-                    Text("三下空格：相邻间隔小于 0.32 秒；普通空格最多延迟 0.32 秒。备用：⌃⌥ 空格。")
+                    Text("Triple Space: tap within 0.32 seconds of each previous tap. Ordinary spaces may be delayed by up to 0.32 seconds. Backup: ⌃⌥ Space.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if model.shortcut == .doubleRightCommand {
-                    Text("轻按并松开右侧 ⌘ 两次，两次间隔小于 0.65 秒；长按或配合其他按键不触发。备用：⌃⌥ 空格。")
+                    Text("Tap and release Right ⌘ twice within 0.65 seconds. Holding it or using a key combination does not trigger dictation. Backup: ⌃⌥ Space.")
                         .font(.caption).foregroundStyle(.secondary)
                     if model.accessibilityPermission && !model.modifierTapAvailable {
-                        Text("右侧 ⌘ 监听暂不可用，请重新打开 Voxa，或使用备用快捷键。")
+                        Text("Right ⌘ detection is unavailable. Restart Voxa or use the backup shortcut.")
                             .font(.caption).foregroundStyle(.orange)
                     }
                 }
                 if !model.shortcutAvailable {
-                    Text("快捷键被其他软件占用，请在上方换一个组合。菜单栏仍可开始／停止。")
+                    Text("This shortcut is already in use. Choose another one above, or use the menu bar to start and finish.")
                         .font(.caption).foregroundStyle(.orange)
                 }
             }.padding(26)
@@ -692,20 +692,20 @@ struct HUDView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: model.phase == .finishing ? "ellipsis" : "waveform").foregroundStyle(.teal)
-                Text(model.phase == .finishing ? "正在整理文字…" : "Voxa · 正在听写").fontWeight(.semibold)
+                Text(model.phase == .finishing ? "Finishing…" : "Voxa · Listening").fontWeight(.semibold)
                 Spacer()
-                Text("\(model.shortcut.label) 结束").font(.caption).foregroundStyle(.secondary)
+                Text("\(model.shortcut.label) to finish").font(.caption).foregroundStyle(.secondary)
             }
-            Text(model.transcript.isEmpty ? "请开始说话…" : model.transcript)
+            Text(model.transcript.isEmpty ? "Start speaking…" : model.transcript)
                 .lineLimit(4).frame(maxWidth: .infinity, alignment: .leading)
             Text(model.recognitionMode).font(.caption2).foregroundStyle(.secondary)
             HStack {
-                Text(model.autoFinish ? "说完停顿后自动输入" : "结束后才会输入到光标")
+                Text(model.autoFinish ? "Pause to insert" : "Finish to insert")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("取消") { model.cancel() }.buttonStyle(.borderless)
+                Button("Cancel") { model.cancel() }.buttonStyle(.borderless)
                     .disabled(model.phase != .listening)
-                Button("结束并输入") { model.stop() }.buttonStyle(.borderedProminent).tint(.teal)
+                Button("Finish & Insert") { model.stop() }.buttonStyle(.borderedProminent).tint(.teal)
                     .disabled(model.phase != .listening)
             }
         }.padding(18).frame(width: 400, alignment: .leading)
@@ -737,7 +737,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.setActivationPolicy(.accessory)
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         status.button?.image = menuIcon()
-        status.button?.toolTip = "Voxa · \(controller.shortcut.label) 开始／停止"
+        status.button?.toolTip = "Voxa · \(controller.shortcut.label) Start / Finish"
         let menu = NSMenu()
         menu.delegate = self
         status.menu = menu
@@ -799,12 +799,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 }
                 NSApp.terminate(nil)
             }
+        } else if let index = CommandLine.arguments.firstIndex(of: "--ui-preview"), CommandLine.arguments.count > index + 1 {
+            let directory = CommandLine.arguments[index + 1]
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
+                do {
+                    try FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+                    try exportPreview(window: window, size: NSSize(width: 640, height: 1200), path: directory + "/settings.png")
+                    controller.phase = .listening
+                    controller.transcript = "Your voice, right where you type. This is a longer transcript to check that the preview stays readable and that the Finish & Insert button remains visible."
+                    controller.recognitionMode = "On-device recognition"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [self] in
+                        do {
+                            try exportPreview(window: hud, size: NSSize(width: 436, height: 214), path: directory + "/listening.png")
+                            print("PREVIEW_OK")
+                        } catch { print("PREVIEW_FAIL: \(error)") }
+                        NSApp.terminate(nil)
+                    }
+                } catch { print("PREVIEW_FAIL: \(error)"); NSApp.terminate(nil) }
+            }
         } else if let index = CommandLine.arguments.firstIndex(of: "--recognition-test"), CommandLine.arguments.count > index + 1 {
             runRecognitionDiagnostic(path: CommandLine.arguments[index + 1])
         } else if CommandLine.arguments.contains("--smoke-test") {
             print("SMOKE_OK: menu, settings, HUD initialized; shortcut=\(controller.shortcut.rawValue); registered=\(controller.shortcutAvailable)")
             NSApp.terminate(nil)
         } else { openSettings() }
+    }
+
+    private func exportPreview(window: NSWindow, size: NSSize, path: String) throws {
+        window.setContentSize(size)
+        window.contentView?.layoutSubtreeIfNeeded()
+        window.displayIfNeeded()
+        guard let view = window.contentView,
+              let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+            throw NSError(domain: "VoxaPreview", code: 1)
+        }
+        view.cacheDisplay(in: view.bounds, to: bitmap)
+        guard let data = bitmap.representation(using: .png, properties: [:]) else {
+            throw NSError(domain: "VoxaPreview", code: 2)
+        }
+        try data.write(to: URL(fileURLWithPath: path))
     }
 
     private func runRecognitionDiagnostic(path: String) {
@@ -897,24 +930,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         label.isEnabled = false
         menu.addItem(label)
         menu.addItem(.separator())
-        let toggle = NSMenuItem(title: controller.phase == .listening ? "停止听写并输入" : "开始听写", action: #selector(toggleListening), keyEquivalent: "")
+        let toggle = NSMenuItem(title: controller.phase == .listening ? "Finish & Insert" : "Start Dictation", action: #selector(toggleListening), keyEquivalent: "")
         toggle.target = self
         toggle.isEnabled = controller.phase == .idle || controller.phase == .listening
         menu.addItem(toggle)
         if controller.phase != .idle {
-            let cancel = NSMenuItem(title: "取消听写    ⌃⌥ Esc", action: #selector(cancelListening), keyEquivalent: "")
+            let cancel = NSMenuItem(title: "Cancel Dictation    ⌃⌥ Esc", action: #selector(cancelListening), keyEquivalent: "")
             cancel.target = self
             menu.addItem(cancel)
         }
-        let copy = NSMenuItem(title: "复制最近识别", action: #selector(copyResult), keyEquivalent: "")
+        let copy = NSMenuItem(title: "Copy Last Transcript", action: #selector(copyResult), keyEquivalent: "")
         copy.target = self
         copy.isEnabled = !controller.lastResult.isEmpty
         menu.addItem(copy)
         menu.addItem(.separator())
-        let settings = NSMenuItem(title: "设置与权限…", action: #selector(openSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: "Settings & Permissions…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
-        let quit = NSMenuItem(title: "退出Voxa", action: #selector(quitApp), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit Voxa", action: #selector(quitApp), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
     }

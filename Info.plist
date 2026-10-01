@@ -6,12 +6,14 @@
   <key>CFBundleName</key><string>Voxa</string>
   <key>CFBundleDisplayName</key><string>Voxa</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.0.0</string>
-  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleShortVersionString</key><string>1.1.0</string>
+  <key>CFBundleVersion</key><string>2</string>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key><array><string>en</string></array>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
-  <key>NSMicrophoneUsageDescription</key><string>Voxa需要麦克风权限，才能将你说的话输入到光标所在位置。</string>
-  <key>NSSpeechRecognitionUsageDescription</key><string>Voxa使用 Apple 语音识别将声音转为文字。优先在本机处理；本机不可用时可使用 Apple 在线识别。</string>
+  <key>NSMicrophoneUsageDescription</key><string>Voxa needs microphone access to turn your speech into text at the cursor.</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>Voxa uses Apple speech recognition to transcribe your voice. Audio is processed on your device when supported; otherwise Apple online recognition may be used.</string>
 </dict></plist>
