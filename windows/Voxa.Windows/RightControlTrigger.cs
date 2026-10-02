@@ -58,7 +58,11 @@ internal sealed class RightControlTrigger : IDisposable
                     Native.OtherModifiersDown))
                 {
                     // Hooks return immediately. Recognition and UI work are queued outside the callback.
-                    dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => Triggered?.Invoke()));
+                    var targetWindow = Native.GetForegroundWindow();
+                    dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+                    {
+                        if (Native.GetForegroundWindow() == targetWindow) Triggered?.Invoke();
+                    }));
                 }
             }
         }

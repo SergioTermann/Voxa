@@ -44,6 +44,7 @@ public partial class PreviewWindow : Window
         Heading.Text = "正在聆听";
         Transcript.Text = "让想法自然流动，让每一句话都能轻松到达光标。";
         Show();
+        animation.Stop();
         for (int i = 0; i < Wave.Children.Count; i++) ((Rectangle)Wave.Children[i]).Height = 3 + 16 * Math.Abs(Math.Sin(i * 0.7));
     }
     internal void UpdatePreview(DictationController current)

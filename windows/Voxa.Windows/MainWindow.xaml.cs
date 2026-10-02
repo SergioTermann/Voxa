@@ -130,13 +130,13 @@ public partial class MainWindow : Window
         AutoFinish.IsChecked = true;
         Result.Text = "";
         EmptyResult.Visibility = Visibility.Visible;
-        Width = 1040; Height = 760;
+        Width = 1040; Height = 780;
         UpdateLayout();
         SaveImage(this, System.IO.Path.Combine(directory, "settings.png"));
         Result.Text = "让想法自然流动，让每一句话都能轻松到达光标。\nVoxa 帮你专注表达，无需打断思路。";
         EmptyResult.Visibility = Visibility.Collapsed;
         CopyButton.IsEnabled = true;
-        Width = 920; Height = 680;
+        Width = 920; Height = 720;
         UpdateLayout();
         SaveImage(this, System.IO.Path.Combine(directory, "settings-compact.png"));
         preview.ShowUiSample();
