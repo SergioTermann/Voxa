@@ -113,9 +113,8 @@ public partial class MainWindow : Window
         tray.Text = idle ? "Voxa · 双击右 Ctrl" : "Voxa · 正在听写";
         if (idle)
         {
-            bool wasVisible = preview.IsVisible;
             preview.Hide();
-            if (wasVisible && !IsVisible) tray.ShowBalloonTip(3500, "Voxa", controller.Message, Forms.ToolTipIcon.Info);
+            if (!IsVisible && source != null) tray.ShowBalloonTip(3500, "Voxa", controller.Message, Forms.ToolTipIcon.Info);
         }
         else preview.UpdatePreview(controller);
     }
