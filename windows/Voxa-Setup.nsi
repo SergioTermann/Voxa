@@ -1,4 +1,4 @@
-Unicode true
+﻿Unicode true
 !include "MUI2.nsh"
 !include "x64.nsh"
 !include "WinVer.nsh"
@@ -70,7 +70,7 @@ FunctionEnd
 
 Section "$(InstallSection)"
   SetOutPath "$INSTDIR"
-  File /r "../build/windows/win-x64/*"
+  File /r "..\build\windows\win-x64\*"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateDirectory "$SMPROGRAMS\Voxa"
   CreateShortcut "$SMPROGRAMS\Voxa\Voxa.lnk" "$INSTDIR\Voxa.exe"
