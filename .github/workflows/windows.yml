@@ -31,6 +31,17 @@ jobs:
         run: |
           $installer = Get-ChildItem build/windows/*-Setup-x64.exe | Select-Object -First 1
           ./windows/verify-installer.ps1 -Installer $installer.FullName
+      - name: Render Windows UI and check right Ctrl hooks
+        shell: pwsh
+        run: |
+          $app = Start-Process -FilePath './build/windows/win-x64/Voxa.exe' -ArgumentList '--ui-check', 'build/windows/ui-preview' -Wait -PassThru
+          if ($app.ExitCode -ne 0) { throw 'UI render or right Ctrl hook check failed.' }
+          Get-Content build/windows/ui-preview/diagnostics.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Voxa-Windows-UI
+          path: build/windows/ui-preview
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: Voxa-Windows-installers

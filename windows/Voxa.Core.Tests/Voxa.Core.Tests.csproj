@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Voxa.Windows/DictationPolicy.cs" Link="DictationPolicy.cs" />
+    <Compile Include="../Voxa.Windows/RightControlSequence.cs" Link="RightControlSequence.cs" />
     <Compile Include="../Voxa.Windows/Native.cs" Link="Native.cs" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 using System;
 using System.Speech.Recognition;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows.Threading;
 
 namespace Voxa;
 
@@ -9,8 +9,8 @@ internal enum Phase { Idle, Listening, Finishing }
 
 internal sealed class DictationController : IDisposable
 {
-    private readonly Control dispatcher;
-    private readonly Timer timer = new() { Interval = 150 };
+    private readonly Dispatcher dispatcher;
+    private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(150) };
     private SpeechRecognitionEngine? engine;
     private TranscriptBuffer buffer = new("en-US");
     private long session, started, lastText, lastVoice, finishStarted;
@@ -19,10 +19,11 @@ internal sealed class DictationController : IDisposable
     internal Phase Phase { get; private set; }
     internal string Preview => buffer.Preview;
     internal string LastResult { get; private set; } = "";
-    internal string Message { get; private set; } = "点击其他应用的输入框，按 Ctrl + Alt + Space 开始听写。";
+    internal string Message { get; private set; } = "点击输入框，双击右 Ctrl 开始听写。";
     internal event Action? Changed;
+    internal int AudioLevel { get; private set; }
 
-    internal DictationController(Control dispatcher)
+    internal DictationController(Dispatcher dispatcher)
     {
         this.dispatcher = dispatcher;
         timer.Tick += (_, _) => Tick();
@@ -36,7 +37,7 @@ internal sealed class DictationController : IDisposable
 
     private void Dispatch(long id, Action action)
     {
-        if (dispatcher.IsDisposed || !dispatcher.IsHandleCreated) return;
+        if (dispatcher.HasShutdownStarted) return;
         try { dispatcher.BeginInvoke((Action)(() => { if (id == session && engine != null) action(); })); }
         catch (InvalidOperationException) { /* Closing the app. */ }
     }
@@ -60,6 +61,7 @@ internal sealed class DictationController : IDisposable
         destination = null;
         autoFinish = finishAfterPause;
         speaking = false;
+        AudioLevel = 0;
         started = lastText = lastVoice = Environment.TickCount64;
         try
         {
@@ -86,6 +88,7 @@ internal sealed class DictationController : IDisposable
                 buffer.Hypothesize("");
                 Publish();
             });
+            engine.AudioLevelUpdated += (_, e) => Dispatch(id, () => AudioLevel = e.AudioLevel);
             engine.AudioStateChanged += (_, e) => Dispatch(id, () =>
             {
                 speaking = e.AudioState == AudioState.Speech;
@@ -97,7 +100,7 @@ internal sealed class DictationController : IDisposable
             Phase = Phase.Listening;
             engine.RecognizeAsync(RecognizeMode.Multiple);
             timer.Start();
-            Publish("正在聆听；再次按 Ctrl + Alt + Space 完成，Ctrl + Alt + Esc 取消。");
+            Publish("正在聆听；双击右 Ctrl 完成，Ctrl + Alt + Esc 取消。");
         }
         catch (Exception e)
         {
@@ -184,6 +187,7 @@ internal sealed class DictationController : IDisposable
         timer.Stop();
         var old = engine;
         engine = null;
+        AudioLevel = 0;
         if (old == null) return;
         try { old.RecognizeAsyncCancel(); }
         catch (InvalidOperationException) { }
@@ -194,6 +198,6 @@ internal sealed class DictationController : IDisposable
     {
         ++session;
         ReleaseEngine();
-        timer.Dispose();
+
     }
 }

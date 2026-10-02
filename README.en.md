@@ -8,14 +8,14 @@
 
 ## Download and install
 
-[Download v1.2.0](https://github.com/SergioTermann/Voxa/releases/tag/v1.2.0) · [All releases](https://github.com/SergioTermann/Voxa/releases)
+[Download v1.3.0](https://github.com/SergioTermann/Voxa/releases/tag/v1.3.0) · [All releases](https://github.com/SergioTermann/Voxa/releases)
 
 | Platform | Download | Installation | Requirements |
 | --- | --- | --- | --- |
-| macOS | [`Voxa-v1.2.0-macOS-arm64.dmg`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-macOS-arm64.dmg) | Open the DMG and drag **Voxa.app** to **Applications** | Apple Silicon, macOS 13+ |
-| macOS ZIP | [`Voxa-v1.2.0-macOS-arm64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-macOS-arm64.zip) | Extract and move **Voxa.app** to Applications | Same as above |
-| Windows | [`Voxa-v1.2.0-Windows-Setup-x64.exe`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-Windows-Setup-x64.exe) | Run the installer; Chinese / English setup, shortcuts and uninstaller included | Windows 10 / 11, x64, a compatible local SAPI dictation engine |
-| Windows portable | [`Voxa-v1.2.0-Windows-x64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-Windows-x64.zip) | Extract the entire archive and run **Voxa.exe** | Same as above |
+| macOS | [`Voxa-v1.3.0-macOS-arm64.dmg`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-macOS-arm64.dmg) | Open the DMG and drag **Voxa.app** to **Applications** | Apple Silicon, macOS 13+ |
+| macOS ZIP | [`Voxa-v1.3.0-macOS-arm64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-macOS-arm64.zip) | Extract and move **Voxa.app** to Applications | Same as above |
+| Windows | [`Voxa-v1.3.0-Windows-Setup-x64.exe`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-Windows-Setup-x64.exe) | Run the installer; Chinese / English setup, shortcuts and uninstaller included | Windows 10 / 11, x64, a compatible local SAPI dictation engine |
+| Windows portable | [`Voxa-v1.3.0-Windows-x64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-Windows-x64.zip) | Extract the entire archive and run **Voxa.exe** | Same as above |
 
 The Windows package includes the .NET runtime. No separate .NET installation or administrator permission is required. It installs to `%LOCALAPPDATA%\Programs\Voxa`; uninstall through Windows Installed Apps. Exit Voxa from the tray before upgrading or uninstalling.
 
@@ -48,11 +48,13 @@ The macOS interface is in English. Documentation is available in Chinese and Eng
 1. Launch Voxa and select an installed recognition language.
 2. Allow desktop microphone access in Windows privacy settings and check the default recording device.
 3. Click an editable field in Notepad or another app.
-4. Press **Ctrl + Alt + Space** to start; the floating preview shows recognized text.
-5. Pause to finish automatically, or press **Ctrl + Alt + Space** again to finish and insert.
+4. **Tap and release Right Ctrl twice** to start; the floating preview shows recognized text.
+5. Pause to finish automatically, or **double-tap Right Ctrl** again to finish and insert.
 6. **Ctrl + Alt + Esc** cancels. Closing settings leaves Voxa running in the tray; use the tray menu to quit.
 
-The Windows app interface is in Chinese, and the installer supports Chinese and English. This version uses fixed shortcuts. Language components must expose a **SAPI dictation engine** to `System.Speech`; working Win + H or Voice Access does not establish compatibility. Dictation cannot start without a compatible engine. Windows 11 24H2 removed the legacy Speech Recognition interface, so a compatible engine cannot be assumed on every new PC.
+The Windows app uses dark cards, a dedicated transcript area and a compact preview with microphone-level visualization. The app interface is Chinese; the installer supports Chinese and English. **Ctrl + Alt + Space** remains a backup shortcut. Each Right Ctrl press is under 0.5 seconds, with a gap under 0.65 seconds. Long holds, key combinations, mouse actions and window changes interrupt the sequence; ordinary keystrokes pass through.
+
+Language components must expose a **SAPI dictation engine** to `System.Speech`; working Win + H or Voice Access does not establish compatibility. Dictation cannot start without a compatible engine. Windows 11 24H2 removed the legacy Speech Recognition interface, so a compatible engine cannot be assumed on every new PC.
 
 Detailed compatibility, development and validation guidance: [Windows English guide](windows/README.en.md) · [Windows 中文说明](windows/README.md). Actual microphone recognition and insertion compatibility still require testing on the target Windows device.
 
@@ -65,7 +67,7 @@ Detailed compatibility, development and validation guidance: [Windows English gu
 - Voxa does not save recordings or transcript logs. The latest result stays in memory and is cleared on exit.
 - Windows stores only the recognizer ID and auto-finish preference in `%LOCALAPPDATA%\Voxa\settings.json`; macOS uses system preferences.
 - Manual copying places text on the system clipboard, subject to the operating system's history and sync settings.
-- Shortcut detection does not log other keystrokes.
+- Windows uses global keyboard and mouse hooks only to detect the Right Ctrl sequence; other keystrokes are not stored.
 
 ## Insertion behavior
 

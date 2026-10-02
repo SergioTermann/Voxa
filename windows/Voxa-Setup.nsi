@@ -3,7 +3,7 @@
 !include "x64.nsh"
 !include "WinVer.nsh"
 !ifndef VOXA_VERSION
-  !define VOXA_VERSION "1.2.0"
+  !define VOXA_VERSION "1.3.0"
 !endif
 
 Name "Voxa ${VOXA_VERSION}"

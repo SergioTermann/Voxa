@@ -2,7 +2,7 @@
 
 [中文](README.md) | [English](README.en.md) · [返回项目首页](../README.md)
 
-Windows 原生语音输入工具。使用 C#、.NET 8、WinForms、Windows `System.Speech` / SAPI 本机听写；不需要 API Key。macOS 版本仍位于仓库根目录的 `Sources/`。
+Windows 原生语音输入工具。使用 C#、.NET 8、WPF、Windows `System.Speech` / SAPI 本机听写；不需要 API Key。macOS 版本仍位于仓库根目录的 `Sources/`。
 
 这是 Windows 首版实现，目前已在 macOS 上交叉编译并通过核心逻辑测试，**尚未完成 Windows 真机麦克风与跨应用输入验收**。仓库包含 Windows CI 构建、启动与静默安装 / 卸载检查；真实语音和跨应用输入仍需在目标设备验证。
 
@@ -16,7 +16,7 @@ Windows 原生语音输入工具。使用 C#、.NET 8、WinForms、Windows `Syst
 
 ## 安装与卸载
 
-从 [v1.2.0 Release](https://github.com/SergioTermann/Voxa/releases/tag/v1.2.0) 下载 `Voxa-v1.2.0-Windows-Setup-x64.exe`，双击运行，选择中文或英文向导即可安装。
+从 [v1.3.0 Release](https://github.com/SergioTermann/Voxa/releases/tag/v1.3.0) 下载 `Voxa-v1.3.0-Windows-Setup-x64.exe`，双击运行，选择中文或英文向导即可安装。
 
 - 安装包包含 .NET 运行时，使用者无需另装 .NET，也无需管理员权限。
 - 安装目录为 `%LOCALAPPDATA%\Programs\Voxa`，创建开始菜单和桌面快捷方式。
@@ -38,8 +38,8 @@ Windows 原生语音输入工具。使用 C#、.NET 8、WinForms、Windows `Syst
 脚本执行核心测试、发布包含运行时的应用，再编译安装包。只要便携版可运行 `./windows/build.ps1`。
 
 ```text
-build/windows/Voxa-v1.2.0-Windows-Setup-x64.exe
-build/windows/Voxa-v1.2.0-Windows-x64.zip
+build/windows/Voxa-v1.3.0-Windows-Setup-x64.exe
+build/windows/Voxa-v1.3.0-Windows-x64.zip
 build/windows/win-x64/Voxa.exe
 ```
 
@@ -63,12 +63,14 @@ GitHub Actions **Windows build and installer** 工作流会产出安装器和 ZI
 
 1. 启动 Voxa，在设置窗口选择本机识别语言。可选择停顿后自动完成。
 2. 点击记事本等普通应用的可编辑文本框。
-3. 按 **Ctrl + Alt + Space** 开始；不抢焦点的浮窗显示实时识别结果。
-4. 停顿后自动完成，或再次按 **Ctrl + Alt + Space** 完成并输入。自动结束需要已经确认的识别文字、文字稳定且没有语音活动约 1.6 秒；引擎自身的断句还会增加延迟。
+3. **快速按下并松开右 Ctrl 两次**开始；不抢焦点的浮窗显示实时识别结果。
+4. 停顿后自动完成，或再次**双击右 Ctrl**完成并输入。自动结束需要已经确认的识别文字、文字稳定且没有语音活动约 1.6 秒；引擎自身的断句还会增加延迟。
 5. 按 **Ctrl + Alt + Esc** 取消。每次会话最长约 55 秒，完成阶段另有最多 5 秒超时保护。
 6. 关闭设置窗口会隐藏到托盘；从托盘重新打开、复制上次文字或退出。
 
-如果快捷键被占用，设置窗口会显示注册失败；关闭占用它的程序后重启 Voxa。第一版固定使用上述快捷键，没有移植 macOS 的 Command 双击和三连空格触发。
+默认使用右 Ctrl 双击开始 / 完成：每次轻按不超过 0.5 秒，两次间隔不超过 0.65 秒。左 Ctrl 不触发，Ctrl+C 等组合键、长按、鼠标操作和切换窗口会中断序列。**Ctrl + Alt + Space** 保留为备用，普通输入不会被拦截。如果备用快捷键被占用，设置窗口会显示提示。
+
+新界面采用深色卡片、圆角开关与独立转写区域，听写浮窗显示实际麦克风音量。
 
 ## 输入行为
 
@@ -90,7 +92,7 @@ GitHub Actions **Windows build and installer** 工作流会产出安装器和 ZI
 %LOCALAPPDATA%\Voxa\settings.json
 ```
 
-全局快捷键通过 `RegisterHotKey` 注册，没有记录其他键盘输入。程序以普通用户权限运行，不申请提权。
+右 Ctrl 双击通过不拦截事件的全局键盘 / 鼠标监听检测；备用快捷键通过 `RegisterHotKey` 注册。其他键盘输入不保存。程序以普通用户权限运行，不申请提权。
 
 ## 验证
 

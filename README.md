@@ -8,14 +8,14 @@
 
 ## 下载与安装
 
-[下载 v1.2.0 安装包](https://github.com/SergioTermann/Voxa/releases/tag/v1.2.0) · [查看所有版本](https://github.com/SergioTermann/Voxa/releases)
+[下载 v1.3.0 安装包](https://github.com/SergioTermann/Voxa/releases/tag/v1.3.0) · [查看所有版本](https://github.com/SergioTermann/Voxa/releases)
 
 | 平台 | 下载文件 | 安装方式 | 系统要求 |
 | --- | --- | --- | --- |
-| macOS | [`Voxa-v1.2.0-macOS-arm64.dmg`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-macOS-arm64.dmg) | 打开 DMG，把 **Voxa.app** 拖到 **Applications（应用程序）** | Apple Silicon，macOS 13+ |
-| macOS（ZIP） | [`Voxa-v1.2.0-macOS-arm64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-macOS-arm64.zip) | 解压后把 **Voxa.app** 移到“应用程序” | 同上 |
-| Windows | [`Voxa-v1.2.0-Windows-Setup-x64.exe`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-Windows-Setup-x64.exe) | 双击安装，支持中文 / 英文安装向导、快捷方式和卸载 | Windows 10 / 11，x64，兼容的本机 SAPI 听写引擎 |
-| Windows（便携版） | [`Voxa-v1.2.0-Windows-x64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.2.0/Voxa-v1.2.0-Windows-x64.zip) | 完整解压后运行 **Voxa.exe** | 同上 |
+| macOS | [`Voxa-v1.3.0-macOS-arm64.dmg`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-macOS-arm64.dmg) | 打开 DMG，把 **Voxa.app** 拖到 **Applications（应用程序）** | Apple Silicon，macOS 13+ |
+| macOS（ZIP） | [`Voxa-v1.3.0-macOS-arm64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-macOS-arm64.zip) | 解压后把 **Voxa.app** 移到“应用程序” | 同上 |
+| Windows | [`Voxa-v1.3.0-Windows-Setup-x64.exe`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-Windows-Setup-x64.exe) | 双击安装，支持中文 / 英文安装向导、快捷方式和卸载 | Windows 10 / 11，x64，兼容的本机 SAPI 听写引擎 |
+| Windows（便携版） | [`Voxa-v1.3.0-Windows-x64.zip`](https://github.com/SergioTermann/Voxa/releases/download/v1.3.0/Voxa-v1.3.0-Windows-x64.zip) | 完整解压后运行 **Voxa.exe** | 同上 |
 
 Windows 安装包包含 .NET 运行时，无需另装 .NET，也无需管理员权限。安装到 `%LOCALAPPDATA%\Programs\Voxa`，可从 Windows“已安装的应用”卸载；更新或卸载前请通过托盘退出 Voxa。
 
@@ -48,11 +48,13 @@ macOS 应用界面为英文；文档提供中英文，识别语言可以独立�
 1. 启动 Voxa，选择下拉框中实际安装的本机识别语言。
 2. 在 Windows 麦克风隐私设置中允许桌面应用访问麦克风，并确认默认录音设备可用。
 3. 点击记事本或其他应用中的可编辑输入框。
-4. 按 **Ctrl + Alt + Space** 开始，浮窗显示实时文字。
-5. 停顿后自动完成，或再次按 **Ctrl + Alt + Space** 完成并输入。
+4. **快速按下并松开右 Ctrl 两次**开始，浮窗显示实时文字。
+5. 停顿后自动完成，或再次**双击右 Ctrl**完成并输入。
 6. 按 **Ctrl + Alt + Esc** 取消。关闭设置窗口后继续在系统托盘运行；从托盘退出程序。
 
-Windows 版界面为中文，安装向导提供中文 / 英文。第一版固定使用上述快捷键。语言组件必须提供 `System.Speech` 可访问的 **SAPI 听写引擎**；Win + H 或“语音访问”能用，并不代表该引擎已安装。没有兼容引擎时无法听写。Windows 11 24H2 移除了旧版语音识别界面，不能保证每台新系统都有兼容引擎。
+Windows 版采用深色卡片界面、独立转写区域和显示麦克风音量的听写浮窗。界面为中文，安装向导提供中文 / 英文。**Ctrl + Alt + Space** 保留为备用快捷键。右 Ctrl 每次按住不超过 0.5 秒，两次间隔不超过 0.65 秒；长按、组合键、鼠标操作和切换窗口会中断序列，普通按键不会被拦截。
+
+语言组件必须提供 `System.Speech` 可访问的 **SAPI 听写引擎**；Win + H 或“语音访问”能用，并不代表该引擎已安装。没有兼容引擎时无法听写。Windows 11 24H2 移除了旧版语音识别界面，不能保证每台新系统都有兼容引擎。
 
 详细兼容条件、开发和验收说明：[Windows 中文说明](windows/README.md) · [Windows English guide](windows/README.en.md)。Windows 版仍需在目标设备验证真实麦克风识别和各应用的输入兼容性。
 
@@ -65,7 +67,7 @@ Windows 版界面为中文，安装向导提供中文 / 英文。第一版固定
 - Voxa 不保存录音或转写日志；最近结果只保存在内存，退出后清除。
 - Windows 只把识别引擎 ID 和自动结束偏好写到 `%LOCALAPPDATA%\Voxa\settings.json`；macOS 使用系统偏好存储。
 - 手动复制会把文字写入系统剪贴板，之后由系统剪贴板历史及同步设置管理。
-- 快捷键检测不记录其他键盘输入。
+- Windows 右 Ctrl 检测使用全局键盘与鼠标监听，只判断触发序列，不保存其他键盘输入。
 
 ## 输入行为
 

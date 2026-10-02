@@ -21,6 +21,33 @@ internal static class Native
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern uint SendInput(uint count, Input[] inputs, int size);
 
+
+    internal delegate IntPtr HookProc(int code, IntPtr message, IntPtr data);
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern IntPtr SetWindowsHookEx(int hook, HookProc callback, IntPtr module, uint thread);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool UnhookWindowsHookEx(IntPtr hook);
+    [DllImport("user32.dll")]
+    internal static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    internal static extern IntPtr GetModuleHandle(string? name);
+    [DllImport("dwmapi.dll")]
+    internal static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct KeyboardHookData
+    {
+        public uint VirtualKey, ScanCode, Flags, Time;
+        public UIntPtr ExtraInfo;
+    }
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int index, IntPtr value);
+    internal static void MakeNonActivating(IntPtr hwnd) => SetWindowLongPtr(hwnd, -20,
+        (IntPtr)(GetWindowLongPtr(hwnd, -20).ToInt64() | 0x08000000 | 0x00000080));
+    internal static bool OtherModifiersDown => Down(0xA2) || Down(0x10) || Down(0x12) || Down(0x5B) || Down(0x5C);
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct Input { public uint Type; public InputUnion Data; }
     [StructLayout(LayoutKind.Explicit)]

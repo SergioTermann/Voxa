@@ -2,7 +2,7 @@
 
 [中文](README.md) | [English](README.en.md) · [Project home](../README.en.md)
 
-Native Windows dictation built with C#, .NET 8, WinForms and local `System.Speech` / SAPI recognition. No API key is needed. The macOS implementation is in the root `Sources/` folder.
+Native Windows dictation built with C#, .NET 8, WPF and local `System.Speech` / SAPI recognition. No API key is needed. The macOS implementation is in the root `Sources/` folder.
 
 This is the first Windows implementation. It has been cross-compiled on macOS and passed core logic checks. Live microphone recognition and cross-app insertion still require testing on Windows. CI builds the app and checks startup and silent installation / removal.
 
@@ -16,7 +16,7 @@ This is the first Windows implementation. It has been cross-compiled on macOS an
 
 ## Install and uninstall
 
-Download `Voxa-v1.2.0-Windows-Setup-x64.exe` from the [v1.2.0 Release](https://github.com/SergioTermann/Voxa/releases/tag/v1.2.0), run it and choose the Chinese or English wizard.
+Download `Voxa-v1.3.0-Windows-Setup-x64.exe` from the [v1.3.0 Release](https://github.com/SergioTermann/Voxa/releases/tag/v1.3.0), run it and choose the Chinese or English wizard.
 
 - The installer includes the .NET runtime. Users do not need a separate .NET installation or administrator permission.
 - Installs to `%LOCALAPPDATA%\Programs\Voxa` with Start menu and desktop shortcuts.
@@ -38,8 +38,8 @@ From the repository root in PowerShell:
 This runs core checks, publishes the self-contained application, and compiles the installer. Use `./windows/build.ps1` for the portable package only.
 
 ```text
-build/windows/Voxa-v1.2.0-Windows-Setup-x64.exe
-build/windows/Voxa-v1.2.0-Windows-x64.zip
+build/windows/Voxa-v1.3.0-Windows-Setup-x64.exe
+build/windows/Voxa-v1.3.0-Windows-x64.zip
 build/windows/win-x64/Voxa.exe
 ```
 
@@ -63,12 +63,14 @@ The **Windows build and installer** GitHub workflow produces the installer and Z
 
 1. Launch Voxa, select an installed local recognition language, and optionally enable automatic completion after a pause.
 2. Click an editable field in Notepad or another app.
-3. Press **Ctrl + Alt + Space** to start. A preview that does not activate its window shows the recognized text.
-4. Pause to finish automatically or press **Ctrl + Alt + Space** again. Auto-finish requires confirmed text, stable recognition and no speech activity for about 1.6 seconds; the engine's own segmentation adds delay.
+3. **Tap and release Right Ctrl twice** to start. A preview that does not activate its window shows the recognized text.
+4. Pause to finish automatically or **double-tap Right Ctrl** again. Auto-finish requires confirmed text, stable recognition and no speech activity for about 1.6 seconds; the engine's own segmentation adds delay.
 5. **Ctrl + Alt + Esc** cancels. Sessions last approximately 55 seconds, with a further completion timeout of up to 5 seconds.
 6. Closing settings hides the app to the tray. Reopen settings, copy the latest result or quit from the tray.
 
-If a hotkey is already taken, settings shows registration failure. Close the conflicting app and restart Voxa. This version uses fixed shortcuts without the macOS Command double-tap or triple Space triggers. The Windows app interface is Chinese; the installer offers Chinese and English.
+Right Ctrl double-tap is the default trigger: each press is under 0.5 seconds, with a gap under 0.65 seconds. Left Ctrl does not trigger; Ctrl shortcuts, long holds, mouse actions and window changes interrupt the sequence. **Ctrl + Alt + Space** remains a backup; ordinary input passes through. Conflicting backup hotkeys are reported in settings.
+
+The redesigned interface uses dark cards, rounded controls, a dedicated transcript area and a compact preview showing actual microphone levels. The app interface is Chinese; the installer offers Chinese and English.
 
 ## Insertion behavior
 
@@ -90,7 +92,7 @@ Only the recognizer ID and auto-finish preference are written to:
 %LOCALAPPDATA%\Voxa\settings.json
 ```
 
-Global shortcuts use `RegisterHotKey`; other keyboard input is not logged. The app runs as a regular user without elevation.
+Right Ctrl detection uses global keyboard and mouse hooks that do not suppress events. Backup shortcuts use `RegisterHotKey`; other keyboard input is not stored. The app runs as a regular user without elevation.
 
 ## Validation
 
