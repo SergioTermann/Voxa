@@ -1,0 +1,49 @@
+name: Release installers
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    uses: ./.github/workflows/windows.yml
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package macOS app
+        run: bash scripts/package-macos.sh
+      - name: Core checks
+        run: |
+          xcrun swiftc -swift-version 5 Sources/TextPolicy.swift Sources/TripleSpaceTrigger.swift Tests/main.swift -framework AppKit -framework ApplicationServices -o build/VoiceCursorTests
+          build/VoiceCursorTests
+          plutil -lint Info.plist entitlements.plist
+          if [ "$(uname -m)" = arm64 ]; then build/Voxa.app/Contents/MacOS/VoiceCursor --smoke-test; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Voxa-macOS-installers
+          path: |
+            build/*-macOS-arm64.dmg
+            build/*-macOS-arm64.zip
+          if-no-files-found: error
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Voxa-*-installers
+          path: release-assets
+          merge-multiple: true
+      - name: Publish installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --title "Voxa $RELEASE_TAG" --notes-file RELEASE_NOTES.md
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber

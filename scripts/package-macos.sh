@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+bash "$PROJECT_DIR/scripts/build.sh"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PROJECT_DIR/build/Voxa.app/Contents/Info.plist")"
+STAGE="$(mktemp -d "$PROJECT_DIR/build/dmg.XXXXXX")"
+trap 'rm -rf "$STAGE"' EXIT
+DMG="$PROJECT_DIR/build/Voxa-v${VERSION}-macOS-arm64.dmg"
+ZIP="$PROJECT_DIR/build/Voxa-v${VERSION}-macOS-arm64.zip"
+ditto "$PROJECT_DIR/build/Voxa.app" "$STAGE/Voxa.app"
+ln -s /Applications "$STAGE/Applications"
+cp "$PROJECT_DIR/README.md" "$STAGE/README.md"
+cp "$PROJECT_DIR/README.en.md" "$STAGE/README.en.md"
+mkdir -p "$STAGE/windows" "$STAGE/Assets"
+cp "$PROJECT_DIR/windows/README.md" "$STAGE/windows/README.md"
+cp "$PROJECT_DIR/windows/README.en.md" "$STAGE/windows/README.en.md"
+cp "$PROJECT_DIR/Assets/Voxa-icon.png" "$STAGE/Assets/Voxa-icon.png"
+hdiutil create -volname "Voxa ${VERSION}" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
+hdiutil verify "$DMG"
+ditto -c -k --sequesterRsrc --keepParent "$PROJECT_DIR/build/Voxa.app" "$ZIP"
+codesign --verify --strict "$PROJECT_DIR/build/Voxa.app"
+printf 'Built: %s\nBuilt: %s\n' "$DMG" "$ZIP"

@@ -1,0 +1,40 @@
+name: Windows build and installer
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: [main]
+    paths: ['windows/**', 'README*', '.github/workflows/windows.yml']
+  pull_request:
+    paths: ['windows/**', 'README*', '.github/workflows/windows.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install NSIS compiler
+        shell: pwsh
+        run: |
+          choco install nsis --no-progress -y
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed.' }
+          "${env:ProgramFiles(x86)}\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Test and build installer
+        shell: pwsh
+        run: ./windows/build-installer.ps1
+      - name: Verify installation, startup and removal
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem build/windows/*-Setup-x64.exe | Select-Object -First 1
+          ./windows/verify-installer.ps1 -Installer $installer.FullName
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Voxa-Windows-installers
+          path: |
+            build/windows/*-Setup-x64.exe
+            build/windows/*-Windows-x64.zip
+          if-no-files-found: error
